@@ -85,6 +85,7 @@ def load(args):
         "shape_profile": args.shape_profile,
         "context_tokens": args.context_tokens,
         "max_tokens": args.max_tokens,
+        "prevent_server_caching": args.prevent_server_caching,
         "completions": args.completions,
         "retry": args.retry,
         "api_version": args.api_version,

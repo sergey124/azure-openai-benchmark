@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import json
 import logging
 import math
 import os
@@ -148,6 +147,8 @@ def _run_load(request_builder: Iterable[dict],
    aggregator = _StatsAggregator(
       window_duration=aggregation_duration,
       dump_duration=1, 
+      expected_gen_tokens=request_builder.max_tokens,
+      clients=max_concurrency,
       json_output=json_output)
    requester = OAIRequester(api_key, url, backoff=backoff)
 
@@ -155,6 +156,7 @@ def _run_load(request_builder: Iterable[dict],
       nonlocal aggregator
       nonlocal requester
       request_body, messages_tokens = request_builder.__next__()
+      aggregator.record_new_request()
       stats = await requester.call(session, request_body)
       stats.context_tokens = messages_tokens
       try:
@@ -188,7 +190,7 @@ def _generate_messages(model:str, tokens:int, max_tokens:int=None) -> ([dict], i
       r = wonderwords.RandomWord()
       messages = [{"role":"user", "content":str(time.time()) + " "}]
       if max_tokens is not None:
-         messages.append({"role":"user", "content":str(time.time()) + f" write an essay in at least {max_tokens*3} words"})
+         messages.append({"role":"user", "content":str(time.time()) + f" write a long essay about life in at least {max_tokens} tokens"})
       messages_tokens = 0
 
       if len(CACHED_PROMPT) > 0:

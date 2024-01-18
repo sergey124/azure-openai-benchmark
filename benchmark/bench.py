@@ -6,7 +6,6 @@ import logging
 import os
 from datetime import datetime
 
-from .jsonloganalysis import combine_logs_to_csv
 from .loadcmd import load
 from .tokenizecmd import tokenize
 

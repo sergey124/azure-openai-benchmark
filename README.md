@@ -101,11 +101,12 @@ $ cat mychatcontext.json | python -m benchmark.bench tokenize \
 tokens: 65
 ```
 
-**Analyse JSON logs from multiple runs**
+## Contibutions
+**Extract and Combine JSON logs to CSV**
 
-The `combine_logs` subcommand can be used to load and combine the logs from multiple runs into a single CSV, ready for comparison. This tool extracts the run arguments as well as the final set of stats prior to the run ending (either by termination or hitting the request/duration limit).
+The `combine_logs` CLI can be used to load and combine the logs from multiple runs into a single CSV, ready for comparison and analysis. This tool extracts the run arguments as well as the final set of stats prior to the run ending (either by termination or hitting the request/duration limit).
 ```
-$ python -m benchmark.bench combine_logs logs/ combined_logs.csv --load_recursive
+$ python -m benchmark.contrib.combine_logs logs/ combined_logs.csv --load_recursive
 ```
 
 ## Configuration Option Details

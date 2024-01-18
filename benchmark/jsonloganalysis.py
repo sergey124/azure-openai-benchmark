@@ -19,14 +19,13 @@ def combine_logs_to_csv(
         load_recursive: Whether to load logs in all subdirectories of log_dir. 
             Defaults to True.
     """
-    log_dir = args.logdir
-    save_path = args.savepath
+    log_dir = args.source_dir
+    save_path = args.save_path
     load_recursive = args.load_recursive
 
     log_dir = Path(log_dir)
     log_files = log_dir.rglob("*.log") if load_recursive else log_dir.glob("*.log")
     log_files = sorted(log_files)
-    num_files = len(log_files)
     # Extract run info from each log file
     run_summaries = [extract_run_info_from_log_path(log_file) for log_file in log_files]
     run_summaries = [summary for summary in run_summaries if isinstance(summary, dict)]
@@ -45,19 +44,24 @@ def extract_run_info_from_log_path(log_file: str) -> Optional[dict]:
     run_args = None
     last_logged_stats = None
     early_terminated = False
-    # Process lines, including only info before early termination or when requests start to drain
+    lines_since_request_draining = 0
+    # Process lines, including only info BEFORE early termination (for terminated sessions), or the final log AFFTER requests start to drain (for valid sessions)
     with open(log_file) as f:
         for line in f.readlines():
             if "got terminate signal" in line:
-                early_terminated = True
-            if "got terminate signal" in line or "requests to drain" in line:
                 # Ignore any stats after termination or draining of requests (since RPM, TPM, rate etc will start to decline as requests gradually finish)
                 break
-            # Save most recent line prior to termination/draining
+            # Save most recent line
             if "Load" in line:
                 run_args = json.loads(line.split("Load test args: ")[-1])
             if "run_seconds" in line:
                 last_logged_stats = line
+            if lines_since_request_draining == 1:
+                # Previous line was draining, use this line as the last set of valid stats
+                break
+            if "requests to drain" in line:
+                # Current line is draining, next line is the last set of valid stats. Allow one more line to be processed.
+                lines_since_request_draining += 1
     if not run_args:
         logging.error(f"Could not extract run args from log file {log_file} - missing run info (it might have been generated with a previous code version).")
         return None

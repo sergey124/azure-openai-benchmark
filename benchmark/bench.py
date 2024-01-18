@@ -50,12 +50,6 @@ def main():
     tokenizer_parser.add_argument("text", help="Input text or chat messages json to tokenize. Default to stdin.", nargs="?")
     tokenizer_parser.set_defaults(func=tokenize)
 
-    combine_logs_parser = sub_parsers.add_parser("combine_logs", help="Combine JSON logs from previous runs into a single CSV.")
-    combine_logs_parser.add_argument("logdir", type=str, help="Directory containing the log files.")
-    combine_logs_parser.add_argument("savepath", type=str, help="Path to save the output output CSV.")
-    combine_logs_parser.add_argument("--load-recursive", action="store_true", help="Whether to load logs in all subdirectories of log_dir.")
-    combine_logs_parser.set_defaults(func=combine_logs_to_csv)
-
     args = parser.parse_args()
 
     if args.func is load and args.log_save_dir is not None:

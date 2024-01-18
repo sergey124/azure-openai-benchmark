@@ -1,7 +1,9 @@
 import argparse
+import logging
 
 from ..jsonloganalysis import combine_logs_to_csv
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 def main():
     parser = argparse.ArgumentParser(description="CLI for combining existing log files.")

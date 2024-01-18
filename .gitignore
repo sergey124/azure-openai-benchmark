@@ -2,3 +2,4 @@ __pycache__
 .pytest_cache
 logs
 .vscode
+contrib/prepare_custom_messages/messages_data/*

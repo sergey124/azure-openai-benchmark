@@ -70,6 +70,18 @@ $ python -m benchmark.bench load \
 2023-10-19 18:21:08 rpm: 8.0   requests: 8     failures: 0    throttled: 0    ctx tpm: 4008.0 gen tpm: 824.0  ttft avg: 0.913  ttft 95th: 1.304  tbt avg: 0.042  tbt 95th: 0.043  e2e avg: 1.241 e2e 95th: 1.663 util avg: 1.3%   util 95th: 2.6% 
 ```
 
+**Load test with custom messages being loaded from file and used in all requests**
+
+```
+$ python -m benchmark.bench load \
+    --deployment gpt-4 \
+    --rate 1 \
+    --context-generation-method replay
+    --replay-path replay_messages.json
+    --max-tokens 500 \
+    https://myaccount.openai.azure.com
+```
+
 **Load test with custom request shape**
 
 ```
@@ -110,11 +122,12 @@ $ python -m benchmark.contrib.combine_logs logs/ combined_logs.csv --load_recurs
 ```
 
 ## Configuration Option Details
-### Shape profiles
+### Context Generation Method
+Using the `--context-generation-method` argument, this tool gives two options for how the source content of each request is generated:
 
-The tool generates synthetic requests using random words according to the number of context tokens in the shape profile requested. In addition, to avoid any engine optimizations, each prompt is prefixed with a random prefix to force engine to run a full request processing for each request without any optimization. This ensures that the results observed while running the tool are the worst case scenario for given traffic shape.
+**1: `generate`** [default]: Context information is generated automatically from a list of all english words, and the endpoint is instructed to generate a long story of `max_tokens` words. This is useful where existing data is not yet available, and should reslt in similar performance as real-world workoads with the same number of context & completion tokens.
 
-The tool supports four different shape profiles via command line option `--shape-profile`:
+In this mode, there are four different shape profiles via command line option `--shape-profile`:
 |profile|description|context tokens|max tokens|
 |-|-|-|-|
 |`balanced`|[default] Balanced count of context and generation tokens. Should be representative of typical workloads.|500|500|
@@ -123,6 +136,32 @@ The tool supports four different shape profiles via command line option `--shape
 |`custom`|Allows specifying custom values for context size (`--context-tokens`) and max generation tokens (`--max-tokens`).|||  
 
 Note: With the default prompting strategy, OpenAI models will typically return completions of a max of 700-1200 tokens. If setting `max_tokens` above 750, be aware that the results for `rpm` may be higher, and `e2e` latency lower, than if the model was returning completions of size `max_tokens` in every response. Refer to the `gen_tpr` stats at the end of each run to see how many tokens were generated across responses.
+
+**2: `replay`**: Messages are loaded from a JSON file and replayed back to the endpoint. This is useful for scenarios where testing with real-world data is important, and that data has already been generated or collected from an existing LLM application. 
+
+In this mode, all messages in the file are sampled randomly when making requests to the endpoint. This means the same message may be used multiple times in a benchmarking run, but with a different random prefix added to the first message in each (see below). The format of the JSON file should be a single array containing separate lists of messages which conform to the [OpenAI chat completions API schema](https://platform.openai.com/docs/api-reference/chat/create), like so:
+
+```
+[
+    [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Can you explain how photosynthesis works?"}
+    ],
+    [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "What is the capital of France?"},
+      {"role": "assistant", "content": "The capital of France is Paris."},
+      {"role": "user", "content": "Please tell me about the history of Paris."}
+    ],
+]
+```
+
+In addition, to avoid any engine optimizations, each prompt is prefixed with a random prefix to force the inference endpoint to process each request without any optimization/caching that might occur if workloads are the same. This ensures that the results observed while running the tool are the worst case scenario for given traffic shape. For example:
+
+|initial request|request with random prefixes|
+|-|-|
+|{"role": "user", "content": "Can you explain how photosynthesis works?"}|{"role": "user", "content": "1704441942.868042 Can you explain how photosynthesis works?"}|
+||{"role": "user", "content": "1704441963.715898 Can you explain how photosynthesis works?"}|
 
 ### Output fields
 

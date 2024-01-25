@@ -47,7 +47,7 @@ def main():
     load_parser.add_argument("--top-p", type=float, help="Request top_p.")
     load_parser.add_argument("-f", "--output-format", type=str, default="human", help="Output format.", choices=["jsonl", "human"])
     load_parser.add_argument("--log-save-dir", type=str, help="If provided, will save stddout to this directory. Filename will include important run parameters.")
-    load_parser.add_argument("-t", "--retry", type=str, default="none", help="Request retry strategy.", choices=["none", "exponential"])
+    load_parser.add_argument("-t", "--retry", type=str, default="none", help="Request retry strategy. See README for details", choices=["none", "exponential"])
     load_parser.add_argument("-e", "--deployment", type=str, help="Azure OpenAI deployment name.", required=True)
     load_parser.add_argument("api_base_endpoint", help="Azure OpenAI deployment base endpoint.", nargs=1)
     load_parser.set_defaults(func=load)

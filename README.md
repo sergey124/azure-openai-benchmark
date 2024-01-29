@@ -126,7 +126,7 @@ tokens: 65
 
 The `combine_logs` CLI can be used to load and combine the logs from multiple runs into a single CSV, ready for comparison and analysis. This tool extracts the run arguments as well as the final set of stats prior to the run ending (either by termination or hitting the request/duration limit).
 ```
-$ python -m benchmark.contrib.combine_logs logs/ combined_logs.csv --load_recursive
+$ python -m benchmark.contrib.combine_logs logs/ combined_logs.csv --load-recursive
 ```
 
 ## Configuration Option Details

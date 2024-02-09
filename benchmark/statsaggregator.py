@@ -132,6 +132,9 @@ class _StatsAggregator(threading.Thread):
          run_seconds = round(time.time() - self.start_time)
          timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
          e2e_latency_avg = round(np.average(self.request_latency._values()), 3) if self.request_latency._len() > 0 else "n/a"
+         e2e_latency_50th = round(np.percentile(self.request_latency._values(), 50), 3) if self.request_latency._len() > 1 else "n/a"
+         e2e_latency_70th = round(np.percentile(self.request_latency._values(), 70), 3) if self.request_latency._len() > 1 else "n/a"
+         e2e_latency_90th = round(np.percentile(self.request_latency._values(), 90), 3) if self.request_latency._len() > 1 else "n/a"
          e2e_latency_95th = round(np.percentile(self.request_latency._values(), 95), 3) if self.request_latency._len() > 1 else "n/a"
          context_per_minute = round(60.0 * np.sum(self.context_tokens._values()) / self.window_duration, 0) if self.context_tokens._len() > 0 else "n/a"
          gen_per_minute = round(60.0 * np.sum(self.generated_tokens._values()) / self.window_duration, 0) if self.generated_tokens._len() > 0 else "n/a"
@@ -184,6 +187,9 @@ class _StatsAggregator(threading.Thread):
                },
                "e2e": {
                   "avg": e2e_latency_avg,
+                  "50th": e2e_latency_50th,
+                  "70th": e2e_latency_70th,
+                  "90th": e2e_latency_90th,
                   "95th": e2e_latency_95th,
                },
                "ttft": {

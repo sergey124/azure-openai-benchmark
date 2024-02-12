@@ -1,10 +1,41 @@
 import argparse
 import json
 import logging
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pandas as pd
+
+
+def plot(df):
+    df.replace('n/a', np.nan, inplace=True)
+    df = df.apply(pd.to_numeric, errors='ignore')
+    df['failure_rate'] = (df['failures'] / df['requests']) * 100
+
+    # Plotting the data
+    plt.figure(figsize=(10, 6))
+
+    # Plotting rpm
+    plt.plot(df['rate'], df['rpm'], marker='o', label='RPM', color='blue')
+
+    # Plotting failure rate
+    plt.plot(df['rate'], df['failure_rate'], marker='o', label='Failure Rate (%)', color='red')
+
+    # Adding labels and title
+    plt.xlabel('Request rate per minute')
+    plt.ylabel('Count')
+    plt.title('Rate vs. RPM, Requests, Failure Rate')
+    plt.xticks(df['rate'])  # Ensure all rate values are displayed on x-axis
+    plt.grid(True)
+    plt.legend()
+
+    # Saving the visualization to a file
+    plt.savefig('rate_vs_metrics_with_failure_rate.png')
+
+    # Displaying the plot
+    plt.show()
 
 
 def combine_logs_to_csv(
@@ -33,8 +64,10 @@ def combine_logs_to_csv(
     if run_summaries:
         df = pd.DataFrame(run_summaries)
         df.set_index("filename", inplace=True)
-        df.to_csv(save_path, index=True)
+        df.to_csv(save_path, index=True, sep=';')
         logging.info(f"Saved {len(df)} runs to {save_path}")
+
+        plot(df)
     else:
         logging.error(f"No valid runs found in {log_dir}")
     return

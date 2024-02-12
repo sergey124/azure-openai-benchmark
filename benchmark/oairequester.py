@@ -14,7 +14,7 @@ import backoff
 REQUEST_ID_HEADER = "apim-request-id"
 UTILIZATION_HEADER = "azure-openai-deployment-utilization"
 RETRY_AFTER_MS_HEADER = "retry-after-ms"
-MAX_RETRY_SECONDS = 60.0
+MAX_RETRY_SECONDS = 600.0
 
 TELEMETRY_USER_AGENT_HEADER = "x-ms-useragent"
 USER_AGENT = "aoai-benchmark"

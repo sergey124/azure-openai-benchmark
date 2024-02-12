@@ -64,7 +64,7 @@ def combine_logs_to_csv(
     if run_summaries:
         df = pd.DataFrame(run_summaries)
         df.set_index("filename", inplace=True)
-        df.to_csv(save_path, index=True)
+        df.to_csv(save_path, index=True, sep=';')
         logging.info(f"Saved {len(df)} runs to {save_path}")
 
         plot(df)

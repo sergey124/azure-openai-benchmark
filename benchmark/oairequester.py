@@ -90,11 +90,13 @@ class OAIRequester:
         stats.request_start_time = time.time()
         while stats.calls == 0 or time.time() - stats.request_start_time < MAX_RETRY_SECONDS:
             stats.calls += 1
+            logging.info(f"HTTP Request: POST {self.url}")
             response = await session.post(self.url, headers=headers, json=body)
             stats.response_status_code = response.status
             # capture utilization in all cases, if found
             self._read_utilization(response, stats)
             if response.status != 429:
+                logging.info(f"HTTP Request finished with status: {response.status}, response: {str(response)}, content: {str(response.content)}")
                 break
             is_retry_after_ms = RETRY_AFTER_MS_HEADER in response.headers
             is_retry_after = RETRY_AFTER_HEADER in response.headers
@@ -115,11 +117,14 @@ class OAIRequester:
                 # fallback to backoff
                 break
 
+        logging.warning(f"HTTP Request got response, status: {response.status}, response: {str(response)}, content: {str(response.content)}")
         if response.status != 200 and response.status != 429:
             logging.warning(f"call failed: {REQUEST_ID_HEADER}={response.headers[REQUEST_ID_HEADER]} {response.status}: {response.reason}")
         if self.backoff:
+            logging.warning(f"Backoff started with status: {response.status}, response: {str(response)}")
             response.raise_for_status()
         if response.status == 200:
+            logging.warning(f"HTTP Request succeeded with status: {response.status}, response: {str(response)}")
             await self._handle_response(response, stats)
         
     async def _handle_response(self, response: aiohttp.ClientResponse, stats: RequestStats):

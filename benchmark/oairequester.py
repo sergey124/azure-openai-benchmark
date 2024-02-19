@@ -14,6 +14,7 @@ import backoff
 REQUEST_ID_HEADER = "apim-request-id"
 UTILIZATION_HEADER = "azure-openai-deployment-utilization"
 RETRY_AFTER_MS_HEADER = "retry-after-ms"
+RETRY_AFTER_HEADER = "Retry-After"
 MAX_RETRY_SECONDS = 600.0
 
 TELEMETRY_USER_AGENT_HEADER = "x-ms-useragent"
@@ -95,11 +96,16 @@ class OAIRequester:
             self._read_utilization(response, stats)
             if response.status != 429:
                 break
-            if self.backoff and RETRY_AFTER_MS_HEADER in response.headers:
+            is_retry_after_ms = RETRY_AFTER_MS_HEADER in response.headers
+            is_retry_after = RETRY_AFTER_HEADER in response.headers
+            if self.backoff and (is_retry_after_ms or is_retry_after):
                 try:
-                    retry_after_str = response.headers[RETRY_AFTER_MS_HEADER]
-                    retry_after_ms = float(retry_after_str)
-                    logging.debug(f"retry-after sleeping for {retry_after_ms}ms")
+                    if is_retry_after_ms:
+                        retry_after_str = response.headers[RETRY_AFTER_MS_HEADER]
+                        retry_after_ms = float(retry_after_str)
+                    else:
+                        retry_after_str = response.headers[RETRY_AFTER_HEADER]
+                        retry_after_ms = float(retry_after_str) * 1000
                     await asyncio.sleep(retry_after_ms/1000.0)
                 except ValueError as e:
                     logging.warning(f"unable to parse retry-after header value: {UTILIZATION_HEADER}={retry_after_str}: {e}")   
